@@ -1,30 +1,33 @@
 import streamlit as st
 import pandas as pd
+import copy
 
 # ==== CONFIG ====
 st.set_page_config(page_title="App Silvério", layout="centered")
+st.title("App Silvério 🍫")
 
+# ==== CREDENCIAIS ====
 USER = "Paraiso"
 PASSWORD = "12345"
 
 def check_credentials(username, password):
     return username == USER and password == PASSWORD
 
-# ==== ITENS COM ESTADO ====
-if 'itens' not in st.session_state:
-    st.session_state['itens'] = {
-        "OVO FERRERO GRAN ROCHER 365G": {"normal": 49.90, "avariado": 35.00},
-        "OVO FERRERO COLLECTION 241G": {"normal": 39.90, "avariado": 28.00},
-        "OVO FERRERO ROCHER CAIXA 137,5G": {"normal": 29.90, "avariado": 20.00},
-        "OVO KINDER MAXI SURPRESAS DOS DINOS 150G": {"normal": 44.90, "avariado": 30.00},
-        "OVO KINDER MAXI SURPRESAS DAS FADAS 150G": {"normal": 44.90, "avariado": 30.00},
-        "OVO FERRERO ROCHER DARK CAIXA 137,5G": {"normal": 32.90, "avariado": 22.00},
-        "OVO FERRERO ROCHER 225G": {"normal": 36.90, "avariado": 25.00}
-    }
+# ==== DADOS FIXOS ====
+itens_atuais = {
+    "OVO FERRERO GRAN ROCHER 365G": {"normal": 70.66, "avariado": 59.10},
+    "OVO FERRERO COLLECTION 241G": {"normal": 55.16, "avariado": 46.13},
+    "OVO FERRERO ROCHER CAIXA 137,5G": {"normal": 35.09, "avariado": 29.35},
+    "OVO KINDER MAXI SURPRESAS DOS DINOS 150G": {"normal": 51.24, "avariado": 41.38},
+    "OVO KINDER MAXI SURPRESAS DAS FADAS 150G": {"normal": 51.24, "avariado": 41.38},
+    "OVO FERRERO ROCHER DARK CAIXA 137,5G": {"normal": 35.09, "avariado": 29.35},
+    "OVO FERRERO ROCHER 225G": {"normal": 55.16, "avariado": 46.13}
+}
+
+# ==== INICIALIZAR SESSION_STATE ====
+st.session_state['itens'] = copy.deepcopy(itens_atuais)
 
 # ==== LOGIN ====
-st.title("App Silvério 🍫")
-
 if 'authenticated' not in st.session_state:
     st.session_state['authenticated'] = False
 
@@ -41,7 +44,7 @@ if not st.session_state['authenticated']:
             st.error("Nome de usuário ou senha incorretos.")
 else:
     # ==== MENU LATERAL ====
-    menu = st.sidebar.radio("Menu", ["📋 Registrar Venda", "⚙️ Administrar Preços", "🚪 Logout"])
+    menu = st.sidebar.radio("Menu", ["📋 Registrar Venda", "⚙️ Administrar Preços", "🔄 Resetar Preços", "🚪 Logout"])
 
     itens = st.session_state['itens']
 
@@ -96,7 +99,7 @@ else:
         except:
             st.warning("Nenhuma venda registrada ainda.")
 
-    # ==== ADMINISTRAÇÃO DE PREÇOS ====
+    # ==== ADMINISTRAR PREÇOS ====
     elif menu == "⚙️ Administrar Preços":
         st.title("⚙️ Administração de Preços")
         produto = st.selectbox("Selecione o produto:", list(itens.keys()))
@@ -110,9 +113,14 @@ else:
             st.success(f"Preços atualizados para: {produto}")
             st.session_state['itens'] = itens
 
-        # Mostrar todos os preços atuais
         st.markdown("### 🧾 Tabela Atual de Preços")
         st.dataframe(pd.DataFrame(itens).T.rename(columns={"normal": "Normal (R$)", "avariado": "Avariado (R$)"}))
+
+    # ==== RESETAR PREÇOS ====
+    elif menu == "🔄 Resetar Preços":
+        st.session_state['itens'] = itens_atuais.copy()
+        st.success("Preços restaurados com sucesso!")
+        st.experimental_rerun()
 
     # ==== LOGOUT ====
     elif menu == "🚪 Logout":
